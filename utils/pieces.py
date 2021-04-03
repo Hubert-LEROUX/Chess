@@ -92,7 +92,10 @@ class Queen(Piece):
         """
         legalMoves = [] # couples de positions (x, y) possibles
         new_x, new_y = self.x, self.y 
-        while (0 <= new_x < 8 and 0 <= new_y < 8 and board.)
+        while (0 <= new_x < 8 and 0 <= new_y < 8 and board.gridRepr is None) :
+            new_x += 1
+            new_y += 1
+            legalMoves.append((new_x, new_y))
 
         
 class Pawn(Piece):
