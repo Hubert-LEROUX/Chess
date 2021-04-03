@@ -1,8 +1,10 @@
 from utils.varglob import WHITE, BLACK, IMAGE_SIZE
 from utils.board import Board
 from utils.svgsurf import load_svg
+from utils.settings import settings
 import pygame
 import os
+
 
 class Piece():
     """
@@ -14,7 +16,7 @@ class Piece():
         self.player = player # Conserve le joueur qui détient la pièce
         self.alreadyMoved = False # Indique si la pièce a déjà bougé
         self.notation = "" # Conserve la notation de la pièce
-        self.assets_folder = "res/merida"
+        self.assets_folder = os.path.join("res", settings["piecesFolder"])
         self.x = x
         self.y = y
 
@@ -270,9 +272,4 @@ class Knight(Piece):
                 elif self.isOpponentPiece(new_x, new_y, board): # Case appartenant à l'adversaire
                     legalMoves.append((new_x, new_y))
         return legalMoves
-        
-
-if __name__ == "__main__":
-    k = King(BLACK, 4,0,None)
-    print(k)
-        
+                

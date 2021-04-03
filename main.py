@@ -2,6 +2,7 @@ import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 pygame.font.init()
+# import time
 
 
 from utils.pieces import Piece, King, Tower, Bishop, Knight, Queen
@@ -30,8 +31,10 @@ def launchGame():
     while True:
         board.updateGraphicalInterface(WIN)
 
-        playerWhite.turn()
-        playerBlack.turn()
+        pygame.time.delay(100)
+
+        playerWhite.turn(board, playerBlack)
+        playerBlack.turn(board, playerWhite)
     
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

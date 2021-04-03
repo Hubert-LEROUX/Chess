@@ -3,6 +3,8 @@ from utils.varglob import WHITE, BLACK, IMAGE_SIZE, Color
 import os
 
 
+
+
 class Board():
     
     def __init__(self):
@@ -42,7 +44,7 @@ class Board():
         WIN.fill(self.BG_color)
         # on fait chaque case noire
         for i in range(100, 900, 100):
-            if i%200==0: # On commence avec blanc
+            if i%200: # On commence avec blanc
                 for j in range(100,900, 200):
                     WIN.blit(self.WOOD[WHITE], (i,j)) # cases blanches en bois
                 for j in range(200,900, 200):
@@ -52,8 +54,13 @@ class Board():
                     WIN.blit(self.WOOD[BLACK], (i,j))
                 for j in range(200,900, 200):
                     WIN.blit(self.WOOD[WHITE], (i,j))
-        pygame.display.update()
         # Puis on affiche les pièces
+        origin = (100,100)
+        for i,line in enumerate(self.grid):
+            for j,piece in enumerate(line):
+                if piece is not None:
+                    WIN.blit(piece.IMAGE, (origin[0]+j*100, origin[1]+i*100))
+        pygame.display.update()
 
     def markCases(self, cases):
         """
