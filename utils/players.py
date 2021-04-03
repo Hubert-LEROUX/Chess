@@ -1,5 +1,5 @@
 from utils.varglob import WHITE, BLACK
-from utils.pieces import Pawn,King, Tower
+from utils.pieces import Pawn, King, Piece, Queen, Bishop, Tower, Knight
 
 class Player():
     def __init__(self, board, color) -> None:
