@@ -7,11 +7,11 @@ class Player():
         self.pieces = []
 
         if color == WHITE: # On place les pièces en bas
-            yPawns = 1
-            yGreatPieces = 0
-        else:
             yPawns = 6
             yGreatPieces = 7
+        else:
+            yPawns = 1
+            yGreatPieces = 0
 
         for i in range(8): # on ajoute les pions
             pion = Pawn(color, i, yPawns, self)

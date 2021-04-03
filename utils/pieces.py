@@ -1,5 +1,8 @@
-from utils.varglob import WHITE, BLACK
+from utils.varglob import WHITE, BLACK, IMAGE_SIZE
 from utils.board import Board
+from utils.svgsurf import load_svg
+import pygame
+import os
 
 class Piece():
     """
@@ -11,115 +14,31 @@ class Piece():
         self.player = player # Conserve le joueur qui détient la pièce
         self.alreadyMoved = False # Indique si la pièce a déjà bougé
         self.notation = "" # Conserve la notation de la pièce
-        self.x = x 
+        self.assets_folder = "res/merida"
+        self.x = x
         self.y = y
 
     def changeNotation(self):
         self.notation= self.notation.lower() if self.color == WHITE else self.notation.upper()
 
-    def leftUp (self, board) :
+    def move (self, board, dx, dy) :
         r = []
-        nx, ny = self.x, self.y
-        ny -= 1
-        nx -= 1
-        while self.isEmpty(nx, ny) :
+        nx, ny = self.x+dx, self.y+dy # on fait directement le premier mouvement
+        while self.isEmpty(nx, ny, board) :
             r.append((nx, ny))
-            ny -= 1
-            nx -= 1
-        if self.isOpponentPiece(nx, ny):
+            nx += dx
+            ny += dy
+        if self.isOpponentPiece(nx, ny, board) :
             r.append((nx, ny))
         return r
 
-    def leftDown (self, board) :
-        r = []
-        nx, ny = self.x, self.y
-        ny += 1
-        nx -= 1
-        while self.isEmpty(nx, ny) :
-            r.append((nx, ny))
-            ny += 1
-            nx -= 1
-        if self.isOpponentPiece(nx, ny):
-            r.append((nx, ny))
-        return r
-
-    def rightUp (self, board) :
-        r = []
-        nx, ny = self.x, self.y
-        ny -= 1
-        nx += 1
-        while self.isEmpty(nx, ny) :
-            r.append((nx, ny))
-            ny -= 1
-            nx += 1
-        if self.isOpponentPiece(nx, ny):
-            r.append((nx, ny))
-        return r
-    
-    def rightDown (self, board) :
-        r = []
-        nx, ny = self.x, self.y
-        ny += 1
-        nx += 1
-        while self.isEmpty(nx, ny) :
-            r.append((nx, ny))
-            ny += 1
-            nx += 1
-        if self.isOpponentPiece(nx, ny):
-            r.append((nx, ny))
-        return r
-        
-    def down (self, board) :
-        r = []
-        nx, ny = self.x, self.y
-        ny += 1 # pas ajouter la position initiale
-        while self.isEmpty(nx, ny) :
-            r.append((nx, ny))
-            ny += 1
-        if self.isOpponentPiece(nx, ny):
-            r.append((nx, ny))
-        return r
-
-    def up (self, board) :
-        r = []
-        nx, ny = self.x, self.y
-        ny -= 1
-        while self.isEmpty(nx, ny) :
-            r.append((nx, ny))
-            ny -= 1
-        if self.isOpponentPiece(nx, ny):
-            r.append((nx, ny))
-        return r
-
-    def right (self, board) :
-        r = []
-        nx, ny = self.x, self.y
-        nx += 1
-        while self.isEmpty(nx, ny) :
-            r.append((nx, ny))
-            nx += 1
-        if self.isOpponentPiece(nx, ny):
-            r.append((nx, ny))
-        return r
-
-    def left (self, board) :
-        r = []
-        nx, ny = self.x, self.y
-        nx -= 1
-        while self.isEmpty(nx, ny) :
-            r.append((nx, ny))
-            nx -= 1
-        if self.isOpponentPiece(nx, ny):
-            r.append((nx, ny))
-        return r
-
-    def isEmpty(self, board, x, y):
+    def isEmpty(self, x, y, board):
         return 0<=x<8 and 0<=y<8 and (board.grid[y][x] is None)
 
-    def isOpponentPiece(self, board, x, y):
-        return 0<=x<8 and 0<=y<8 and (board.grid[y][x] is not None) and  board.grid[y][x].player != self.player
+    def isOpponentPiece(self, x, y, board):
+        return 0<=x<8 and 0<=y<8 and (board.grid[y][x] is not None) and board.grid[y][x].player != self.player
     
-    def isEmptyOrOpponentPiece(self, board, x,y):
+    def isEmptyOrOpponentPiece(self, x,y, board):
         return self.isEmpty(board, x, y) or self.isOpponentPiece(self, board, x, y)
 
     def __repr__(self) -> str:
@@ -137,11 +56,14 @@ class King(Piece):
         self.notation = "R"
         self.isAccessible = [[True]*8 for _ in range(8)]
         super().changeNotation()
+        
+        # self.IMAGE = pygame.image.load(os.path.join(self.assets_folder, f"{color.lower()[0]}k.svg"))
+        self.IMAGE = load_svg(os.path.join(self.assets_folder, f"{color.lower()[0]}k.svg"))
 
         # Contient tous les décalages possibles (ex : (-1, 1), (0, 1),...)
-        for dx in (0, -1, 1) :
-            for dy in (0, -1, 1) :
-                if dx or dy :
+        for dx in [0, -1, 1]:
+            for dy in [0, -1, 1] :
+                if dx or dy : # si on ne reste pas sur place
                     self.decalages.append((dx, dy))
 
     def canGreatRock(self, board):
@@ -162,9 +84,17 @@ class King(Piece):
             for y in range(8):
                 if board.grid[y][x] != None and board.grid[y][x].player == self.player: # Si c notre propre pièce, on ne  peut pas y aller
                     self.isAccessible[y][x] = False
-        for pieces in opponent.liste:
-            for (x,y) in pieces.getLegalMoves(board):
-                if self.isAccessible[y][x] == True:
+
+        for p in opponent.pieces:
+            # On récup les pièces à vérifier
+            if isinstance(p, King):
+                cases = [(p.x+dec_x, p.y+dec_y) for (dec_x, dec_y) in self.decalages]
+            else:
+                cases = p.getLegalMoves(board, opponent)
+            
+            # Pour chaque case accessible par ladite pièce adverse
+            for (x,y) in cases:
+                if 0<=x<8 and 0<=y<8 and self.isAccessible[y][x] == True:
                     self.isAccessible[y][x] = False
 
     def getLegalMoves(self, board, opponent):
@@ -178,6 +108,8 @@ class King(Piece):
             new_y = self.y+dec_y
             if 0<=new_x<8 and 0<=new_y<8 and self.isAccessible[new_y][new_x]:
                 legalMoves.append((new_x, new_y))
+        # for line in self.isAccessible:
+        #     print(line)
         return legalMoves
 
     
@@ -192,6 +124,9 @@ class Queen(Piece):
         self.notation = "D"
         super().changeNotation()
 
+        # self.IMAGE = pygame.image.load(os.path.join(self.assets_folder, f"{color.lower()[0]}q.svg"))
+        self.IMAGE = load_svg(os.path.join(self.assets_folder, f"{color.lower()[0]}q.svg"))
+
         # Contient tous les décalages 
         for i in range(-7,8):
             self.decalages.append((0,i))
@@ -199,13 +134,16 @@ class Queen(Piece):
             self.decalages.append((i,i))
             self.decalages.append((i,-i))
     
-    def getLegalMoves(self, board):
+    def getLegalMoves(self, board, opponent=None):
         """
         Retourne une liste de mouvements légaux
         """
-        diagonals = self.leftDown(board) + self.leftUp(board) + self.rightDown(board) + self.rightUp(board)
-        lines = self.down(board) + self.right(board) + self.up(board) + self.left(board)
-        return diagonals + lines
+        possibleMoves = []
+        for dx in (-1, 0, 1) :
+            for dy in (-1, 0, 1) :
+                if dx != 0 or dy != 0 :
+                    possibleMoves += self.move(board, dx, dy)
+        return possibleMoves
 
         
 class Pawn(Piece):
@@ -217,14 +155,18 @@ class Pawn(Piece):
         self.notation = "P"
         super().changeNotation()
 
+        # self.IMAGE = pygame.image.load(os.path.join(self.assets_folder, f"{color.lower()[0]}p.svg"))
+        self.IMAGE = load_svg(os.path.join(self.assets_folder, f"{color.lower()[0]}p.svg"))
+
+
         self.tourAuMomentOuElleAvanceDeDeuxCases = None # Pour gérer en Passant
 
         if self.color == WHITE:
-            self.direction = 1
+            self.direction = -1
         else: 
-            direction = -1
+            self.direction = +1
 
-    def getLegalMoves(self, board):
+    def getLegalMoves(self, board, opponent=None):
         """
         Retourne une liste de mouvements légaux
         """
@@ -250,6 +192,8 @@ class Pawn(Piece):
         new_y = self.y + 2*self.direction
         if not self.alreadyMoved and self.isEmpty(self.x, new_y, board): 
             legalMoves.append((self.x, new_y))
+
+        return legalMoves
    
         
         
@@ -262,9 +206,12 @@ class Tower(Piece):
         super().__init__(color, x, y, player)
         self.notation = "T"
         super().changeNotation()
+        # self.IMAGE = load_svg(pygame.image.load(os.path.join(self.assets_folder, f"{color.lower()[0]}r.svg")))
+        self.IMAGE = load_svg(os.path.join(self.assets_folder, f"{color.lower()[0]}r.svg"))
+
     
-    def getLegalMoves(self, board) :
-        return self.left(board) + self.right(board) + self.down(board) + self.up(board)
+    def getLegalMoves(self, board, opponent=None) :
+        return self.move(board, 1, 0) + self.move(board, -1, 0) + self.move(board, 0, 1) + self.move(board, 0, -1)
         
         
 class Bishop(Piece):
@@ -276,6 +223,10 @@ class Bishop(Piece):
         super().__init__(color,x,y,player)
         self.notation = "F"
         super().changeNotation()
+        
+        # self.IMAGE = pygame.image.load(os.path.join(self.assets_folder, f"{color.lower()[0]}b.svg"))
+        self.IMAGE = load_svg(os.path.join(self.assets_folder, f"{color.lower()[0]}b.svg"))
+
 
         # Mouvements 
         for i in range(-7,8):
@@ -283,8 +234,8 @@ class Bishop(Piece):
                 self.decalages.append((i,i))
                 self.decalages.append((i,-i))
 
-    def getLegalMoves(self, board, opponent):
-        return self.leftDown(board) + self.leftUp(board) + self.rightDown(board) + self.rightUp(board)
+    def getLegalMoves(self, board, opponent=None):
+        return self.move(board, 1, 1) + self.move(board, 1, -1) + self.move(board,-1, 1) + self.move(board, -1, -1)
         
 class Knight(Piece):
     """
@@ -295,6 +246,9 @@ class Knight(Piece):
         super().__init__(color,x,y,player)
         self.notation = "C"
         super().changeNotation()
+        # self.IMAGE = load_svg(pygame.image.load(os.path.join(self.assets_folder, f"{color.lower()[0]}n.svg")))
+        self.IMAGE = load_svg(os.path.join(self.assets_folder, f"{color.lower()[0]}n.svg"))
+
 
         # Mouvements 
         for i in [-2,-1,1,2]:
@@ -302,7 +256,7 @@ class Knight(Piece):
                 if abs(i)!=abs(j):
                     self.decalages.append((i,j))
 
-    def getLegalMoves(self, board, opponent):
+    def getLegalMoves(self, board, opponent=None):
         """
         Retourne une liste de mouvements légaux
         """
@@ -311,9 +265,9 @@ class Knight(Piece):
             new_x = self.x+dec_x
             new_y = self.y+dec_y
             if 0 <= new_x < 8 and 0<= new_y < 8:
-                if board.grid[new_y][new_x] == None: # Case vide
+                if self.isEmpty(new_x, new_y, board): # Case vide
                     legalMoves.append((new_x, new_y))
-                elif board.grid[new_y][new_x].player == opponent: # Case appartenant à l'adversaire
+                elif self.isOpponentPiece(new_x, new_y, board): # Case appartenant à l'adversaire
                     legalMoves.append((new_x, new_y))
         return legalMoves
         
