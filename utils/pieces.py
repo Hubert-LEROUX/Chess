@@ -15,24 +15,21 @@ class Piece():
         self.y = y
 
     def changeNotation(self):
-        if self.color == WHITE:
-            self.notation= self.notation.lower()
-        else:
-            self.notation = self.notation.upper()
+        self.notation= self.notation.lower() if self.color == WHITE else self.notation.upper()
 
-    def leftUpMoves (self, board) :
+    def leftUp (self, board) :
         pass
 
-    def leftDownMoves (self, board) :
+    def leftDown (self, board) :
         pass
 
-    def rightUpMoves (self, board) :
+    def rightUp (self, board) :
         pass
     
-    def rightDownMoves (self, board) :
+    def rightDown (self, board) :
         pass
         
-    def downMoves (self, board) :
+    def down (self, board) :
         r = []
         nx, ny = self.x, self.y
         ny += 1 # pas ajouter la position initiale
@@ -43,7 +40,7 @@ class Piece():
             r.append((nx, ny))
         return r
 
-    def upMoves (self, board) :
+    def up (self, board) :
         r = []
         nx, ny = self.x, self.y
         ny -= 1
@@ -54,10 +51,10 @@ class Piece():
             r.append((nx, ny))
         return r
 
-    def rightMoves (self, board) :
+    def right (self, board) :
         pass
 
-    def leftMoves (self, board) :
+    def left (self, board) :
         pass
 
     def isEmpty(self, board, x, y):
@@ -78,7 +75,6 @@ class King(Piece):
     Classe pour le roi
     TODO Great Rock
     TODO Little Rock
-
     """
     def __init__(self, color,x,y,player):
         super().__init__(color,x,y,player)
@@ -193,7 +189,7 @@ class Queen(Piece):
         
 class Pawn(Piece):
     """
-    TODO - Moves
+    TODO - En passant move
     """
     def __init__(self, color,x,y,player):
         super().__init__(color,x,y,player)
@@ -207,7 +203,7 @@ class Pawn(Piece):
         else: 
             direction = -1
 
-    def getLegalMoves(self, board, opponent):
+    def getLegalMoves(self, board):
         """
         Retourne une liste de mouvements légaux
         """
@@ -216,14 +212,24 @@ class Pawn(Piece):
         # On teste si on peut avancer de 1
         new_y = self.y + self.direction
         #i.e. que la case suivante est vide
-        if 0<= new_y < 8 and board.grid[new_y][self.x] is None: 
+        if self.isEmpty(self.x, new_y, board): 
             legalMoves.append((self.x, new_y))
         # On teste à gauche et à droite
+
         new_x = self.x-1
+        # On regarde à gauche
+        if self.isOpponentPiece(new_x, new_y, board): 
+            legalMoves.append((new_x, new_y))
+        # On regarde à droite
         new_x = self.x+1
-        if 0 <= new_y < 8 and board.grid[new_y][self.x] is None: 
+        if self.isOpponentPiece(new_x, new_y, board): 
+            legalMoves.append((new_x, new_y))
+
+        # On peut avencer de deux cases
+        new_y = self.y + 2*self.direction
+        if not self.alreadyMoved and self.isEmpty(self.x, new_y, board): 
             legalMoves.append((self.x, new_y))
-        
+   
         
         
 class Tower(Piece):
@@ -236,15 +242,8 @@ class Tower(Piece):
         self.notation = "T"
         super().changeNotation()
     
-    def getLegalMoves(self, board, opponent) :
-
-        legalMoves = [] # positions légales pour bouger (x, y)
-
-        # LEFT
-        
-
-        return legalMoves
-         
+    def getLegalMoves(self, board) :
+        return self.left(board) + self.right(board) + self.down(board) + self.up(board)
         
         
 class Bishop(Piece):
