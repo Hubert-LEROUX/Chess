@@ -18,6 +18,25 @@ class Board():
         """
         return "\n".join(" ".join(i) for i in self.gridRepr)
 
+    def updateGraphicalInterface(self):
+        """
+        update la graphical interface
+        """
+        pass
+
+    def markCases(self, cases):
+        """
+        Marque certaines cases
+        """
+        pass
+    
+    def demarkCases(self, cases):
+        """
+        deMarque certaines cases
+        """
+        pass
+
+
 
 
 

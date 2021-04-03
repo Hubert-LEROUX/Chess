@@ -48,6 +48,21 @@ class Player():
         self.pieces.append(q)
         board.addPiece(q)
 
+    def turn(self, board, opponent):
+        """
+        Simule le tour de player
+        Retourne False si le joueur est mort
+        """
+        if self.king.isChecked(board, opponent):
+            if len(self.king.getLegalMoves(board, opponent)) == 0:
+                return False # Checkmate
+            else: # On est en échec, on ne peut que bouger le roi
+                pass
+        else:
+            pass
+            # On peut bouger la pièce qu'on veut
+
+        
 
 
 

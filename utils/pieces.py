@@ -18,16 +18,56 @@ class Piece():
         self.notation= self.notation.lower() if self.color == WHITE else self.notation.upper()
 
     def leftUp (self, board) :
-        pass
+        r = []
+        nx, ny = self.x, self.y
+        ny -= 1
+        nx -= 1
+        while self.isEmpty(nx, ny) :
+            r.append((nx, ny))
+            ny -= 1
+            nx -= 1
+        if self.isOpponentPiece(nx, ny):
+            r.append((nx, ny))
+        return r
 
     def leftDown (self, board) :
-        pass
+        r = []
+        nx, ny = self.x, self.y
+        ny += 1
+        nx -= 1
+        while self.isEmpty(nx, ny) :
+            r.append((nx, ny))
+            ny += 1
+            nx -= 1
+        if self.isOpponentPiece(nx, ny):
+            r.append((nx, ny))
+        return r
 
     def rightUp (self, board) :
-        pass
+        r = []
+        nx, ny = self.x, self.y
+        ny -= 1
+        nx += 1
+        while self.isEmpty(nx, ny) :
+            r.append((nx, ny))
+            ny -= 1
+            nx += 1
+        if self.isOpponentPiece(nx, ny):
+            r.append((nx, ny))
+        return r
     
     def rightDown (self, board) :
-        pass
+        r = []
+        nx, ny = self.x, self.y
+        ny += 1
+        nx += 1
+        while self.isEmpty(nx, ny) :
+            r.append((nx, ny))
+            ny += 1
+            nx += 1
+        if self.isOpponentPiece(nx, ny):
+            r.append((nx, ny))
+        return r
         
     def down (self, board) :
         r = []
@@ -36,7 +76,7 @@ class Piece():
         while self.isEmpty(nx, ny) :
             r.append((nx, ny))
             ny += 1
-        if ny < 8 and self.isOpponentPiece(nx, ny):
+        if self.isOpponentPiece(nx, ny):
             r.append((nx, ny))
         return r
 
@@ -47,15 +87,31 @@ class Piece():
         while self.isEmpty(nx, ny) :
             r.append((nx, ny))
             ny -= 1
-        if ny >= 0 and self.isOpponentPiece(nx, ny):
+        if self.isOpponentPiece(nx, ny):
             r.append((nx, ny))
         return r
 
     def right (self, board) :
-        pass
+        r = []
+        nx, ny = self.x, self.y
+        nx += 1
+        while self.isEmpty(nx, ny) :
+            r.append((nx, ny))
+            nx += 1
+        if self.isOpponentPiece(nx, ny):
+            r.append((nx, ny))
+        return r
 
     def left (self, board) :
-        pass
+        r = []
+        nx, ny = self.x, self.y
+        nx -= 1
+        while self.isEmpty(nx, ny) :
+            r.append((nx, ny))
+            nx -= 1
+        if self.isOpponentPiece(nx, ny):
+            r.append((nx, ny))
+        return r
 
     def isEmpty(self, board, x, y):
         return 0<=x<8 and 0<=y<8 and (board.grid[y][x] is None)
@@ -147,44 +203,9 @@ class Queen(Piece):
         """
         Retourne une liste de mouvements légaux
         """
-        legalMoves = [] # couples de positions (x, y) possibles
-        new_x, new_y = self.x, self.y 
-        while (new_x < 7 and new_y < 7 and board.grid[new_y][new_x] is None) : # right down
-            new_x += 1
-            new_y += 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (0 < new_x and 0 < new_y and board.grid[new_y][new_x] is None) : # left upper
-            new_x -= 1
-            new_y -= 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (0 < new_y and new_x < 7 and board.grid[new_y][new_x] is None) : # right up
-            new_x += 1
-            new_y -= 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (0 < new_x and new_y < 7 and board.grid[new_y][new_x] is None) : # left down
-            new_x -= 1
-            new_y += 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (new_y < 7 and board.grid[new_y][new_x] is None) : # down
-            new_y += 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (new_y > 0 and board.grid[new_y][new_x] is None) : # up
-            new_y -= 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (new_x > 0 and board.grid[new_y][new_x] is None) : # left
-            new_x -= 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (new_x < 7 and board.grid[new_y][new_x] is None) : # right
-            new_x += 1
-            legalMoves.append((new_x, new_y))
-        return legalMoves
+        diagonals = self.leftDown(board) + self.leftUp(board) + self.rightDown(board) + self.rightUp(board)
+        lines = self.down(board) + self.right(board) + self.up(board) + self.left(board)
+        return diagonals + lines
 
         
 class Pawn(Piece):
@@ -253,7 +274,7 @@ class Bishop(Piece):
     """
     def __init__(self, color,x,y,player):
         super().__init__(color,x,y,player)
-        self.notation = "C"
+        self.notation = "F"
         super().changeNotation()
 
         # Mouvements 
@@ -263,28 +284,7 @@ class Bishop(Piece):
                 self.decalages.append((i,-i))
 
     def getLegalMoves(self, board, opponent):
-        legalMoves = [] # couples de positions (x, y) possibles
-        new_x, new_y = self.x, self.y 
-        while (new_x < 7 and new_y < 7 and board.grid[new_y][new_x] is None) : # right down
-            new_x += 1
-            new_y += 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (0 < new_x and 0 < new_y and board.grid[new_y][new_x] is None) : # left upper
-            new_x -= 1
-            new_y -= 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (0 < new_y and new_x < 7 and board.grid[new_y][new_x] is None) : # right up
-            new_x += 1
-            new_y -= 1
-            legalMoves.append((new_x, new_y))
-        new_x, new_y = self.x, self.y
-        while (0 < new_x and new_y < 7 and board.grid[new_y][new_x] is None) : # left down
-            new_x -= 1
-            new_y += 1
-            legalMoves.append((new_x, new_y))
-        return legalMoves
+        return self.leftDown(board) + self.leftUp(board) + self.rightDown(board) + self.rightUp(board)
         
 class Knight(Piece):
     """
