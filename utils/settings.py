@@ -1,5 +1,5 @@
 
 settings = {
-    "piecesFolder":"fantasy",
+    "piecesFolder":"merida",
     "boardFolder":"wood"
 }
