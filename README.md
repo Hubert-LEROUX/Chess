@@ -17,7 +17,12 @@ You can chosse between different boards and pieces.
 Dans utils/settings.py, vous pouvez effectuez vos réglages:
 ```
 settings = {
-    "piecesFolder":"merida",
+    "piecesFolder":"merida", # Il y a trois choix différents : merida, fantasy & spatial
     "boardFolder":"wood"
 }
 ```
+
+## Thanks
+
+To the site Canvas Chess http://www.canvaschess.com/download.php
+Je remercie ce site pour les échiquiers et les jeux de pièces qu'ils mettent à disposition.
