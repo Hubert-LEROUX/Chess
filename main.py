@@ -27,7 +27,26 @@ def launchGame():
     playerBlack = Player(board, BLACK)
 
     def endGame(whoWins):
+        """
+        Affiche la fin de la game si victoire de l'un
+        """
         textsurface = end_game_font.render(f'{whoWins} WINS', True, Color.BLUE.value)
+        WIN.blit(textsurface, (400,400))
+        pygame.display.update()
+        duration = 0
+        while duration < 10000:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    exit()
+            pygame.time.delay(50)
+            duration += 50
+        exit()
+
+    def endGameNulle() :
+        """
+        Affiche la fin d'une partie en cas de pat (match nul)
+        """
+        textsurface = end_game_font.render(f'NULLE', True, Color.BLUE.value)
         WIN.blit(textsurface, (400,400))
         pygame.display.update()
         duration = 0
@@ -46,17 +65,23 @@ def launchGame():
         nbCoups+=1
 
 
-        if not playerWhite.turn(board, playerBlack, WIN, nbCoups): # Tour des blancs
+        etat = playerWhite.turn(board, playerBlack, WIN, nbCoups) # Tour des blancs
+        if etat == 0:
             # Les blancs ont perdu
             endGame('BLACK')
+        elif etat == 1:
+            endGameNulle()
 
         # print()
         # print("\n".join([str(x) for x in playerBlack.king.casesInaccessiblesPourLeRoi(board, playerWhite)]))
         # print()
 
-        if not playerBlack.turn(board, playerWhite, WIN, nbCoups): # Tour des noirs
+        etat = playerBlack.turn(board, playerWhite, WIN, nbCoups) # Tour des noirs
+        if etat == 0:
             # Les noirs ont perdu
             endGame('WHITE')
+        elif etat == 1:
+            endGameNulle()
     
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

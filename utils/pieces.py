@@ -244,15 +244,17 @@ class Pawn(Piece):
         # self.tourAuMomentOuElleAvanceDeDeuxCases = None # Pour gérer en Passant
 
         if self.color == WHITE:
+            self.promotionLine = 0
             self.direction = -1
         else: 
+            self.promotionLine = 7
             self.direction = +1
 
     def getLegalMoves(self, board, opponent):
         """
         Retourne une liste de mouvements légaux
         """
-        legalMoves = [] 
+        legalMoves = []
 
         # On teste si on peut avancer de 1
         new_y = self.y + self.direction

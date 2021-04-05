@@ -1,12 +1,14 @@
 import pygame
-from utils.varglob import WHITE, BLACK
+from utils.varglob import WHITE, BLACK, Color
 from utils.pieces import Pawn, King, Piece, Queen, Bishop, Tower, Knight
+
 
 class Player():
     def __init__(self, board, color) -> None:
         # Positionnement des pièces
         self.pieces = []
         self.captured = []
+        self.color = color
 
         if color == WHITE: # On place les pièces en bas
             yPawns = 6
@@ -93,9 +95,9 @@ class Player():
         Simule le tour de player
         """
         # print("CKECKING if check mate")
-
-        if self.isCheckedMated(board, opponent):
-            return False
+        etat = self.isCheckedMated(board, opponent)
+        if etat < 2:
+            return etat
 
         # print("NOT CHECK MATE")
         pieceSelectionne = False
@@ -142,11 +144,69 @@ class Player():
         piece.y = newY
         piece.alreadyMoved = True
         piece.lastMove = nbCoups
-        board.grid[newY][newX] = piece
+        
+        # On regarde s'il y a promotion
+        if isinstance(piece, Pawn) and piece.y == piece.promotionLine: # On fait une promotion
+            pieceDemandee = self.askPromotionPiece(window, piece.x, piece.y)
+            self.pieces.remove(piece)
+            self.pieces.append(pieceDemandee)
+            # pieceDemandee.x = piece.x
+            # pieceDemandee.y = piece.y
+            board.grid[newY][newX] = pieceDemandee
+        else:
+            board.grid[newY][newX] = piece
+            
 
         board.updateGraphicalInterface(window, [self, opponent])
         
-        return True
+        return etat
+
+    def askPromotionPiece(self, window, x,y):
+        """
+        Demande quelle pièce il veut choisir
+        Retourne une instance de la pièce choisie
+        """
+        # On forme une image au-dessus ou en-dessous du terrain en fonction de qui promote
+       
+        
+        pygame.draw.rect(window, Color.WHITE.value, (400,400,200,200))
+        # On affiche les images
+        # En haut à gauche
+        q = Queen(self.color, x, y, self)
+        window.blit(q.IMAGE, (400,400))
+        # En haut à droite
+        t = Tower(self.color, x, y, self)
+        window.blit(t.IMAGE, (400,500))
+        # En bas à gauche
+        c = Knight(self.color, x, y, self)
+        window.blit(c.IMAGE, (500, 400))
+        # En bas à droite
+        b = Bishop(self.color, x, y, self)
+        window.blit(b.IMAGE, (500, 500))
+        pygame.display.update()
+
+        # ON regarde ou l'utilisateur clique
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    # On a choisi une piece ?
+                    mousePosition = pygame.mouse.get_pos() # On récupère la position
+                    x = mousePosition[0]//100 - 4
+                    y = mousePosition[1]//100 - 4
+                    if x==0:
+                        if y==0:
+                            return q
+                        else :
+                            return t
+                    else : # knight or bishop
+                        if y == 0 :
+                            return c
+                        else :
+                            return b
+            pygame.time.delay(100) # On attend un peu pour ne pas trop surmener l'ordi
+        return None
 
     def isChecked(self, board, opponent):
         return self.king.isChecked(board, opponent)
@@ -154,13 +214,19 @@ class Player():
     def isCheckedMated(self, board, opponent):
         """
         Fonction déterminant si le joueur est mort ou non
+        Renvoie un nombre :
+        0 -> défaite
+        1 -> nulle
+        2 -> peut encore jouer
         """
         if self.king not in self.pieces:
-            return True
+            return 0
         for i,piece in enumerate(self.pieces):
             # print(i, piece)
 
             if len(piece.getLegalMoves(board, opponent))>0: # On a au moins un move possible
-                return False
-
-        return True
+                return 2
+        
+        if self.isChecked(board, opponent): # On est en échec
+            return 0
+        return 1 # on n'est pas en échec mais aucune position accessible
