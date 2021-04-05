@@ -175,7 +175,8 @@ class King(Piece):
             new_x = self.x+dec_x
             new_y = self.y+dec_y
             if 0<=new_x<8 and 0<=new_y<8 and isAccessible[new_y][new_x]:
-                legalMoves.append((new_x, new_y))
+                if self.moveAvoidCheck((new_x, new_y), board, opponent):
+                    legalMoves.append((new_x, new_y))
         return legalMoves
 
     def getControls(self, board, opponent):
