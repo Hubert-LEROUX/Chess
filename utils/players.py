@@ -140,6 +140,7 @@ class Player():
         # On dépose notre pièce
         piece.x = newX
         piece.y = newY
+        piece.alreadyMoved = True
         board.grid[newY][newX] = piece
 
         board.updateGraphicalInterface(window)

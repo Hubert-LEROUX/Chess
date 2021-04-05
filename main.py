@@ -2,7 +2,6 @@ import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 pygame.font.init()
-# import time
 
 
 from utils.pieces import Piece, King, Tower, Bishop, Knight, Queen
@@ -21,7 +20,7 @@ def launchGame():
    
 
     main_font = pygame.font.SysFont("comicsans", 50)
-    end_game_font = pygame.font.SysFont("comicsans", 50)
+    end_game_font = pygame.font.SysFont("comicsans", 75)
 
 
 
@@ -29,21 +28,30 @@ def launchGame():
     playerWhite = Player(board, WHITE)
     playerBlack = Player(board, BLACK)
 
+    def endGame(whoWins):
+        textsurface = end_game_font.render(f'{whoWins} WINS', True, Color.BLUE.value)
+        WIN.blit(textsurface, (400,400))
+        pygame.display.update()
+        duration = 0
+        while duration < 10000:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    exit()
+            pygame.time.delay(50)
+            duration += 50
+        exit()
+
     while True:
         board.updateGraphicalInterface(WIN)
-        print(board)
-
-        # pygame.time.delay(100)
+        # print(board)
 
         if not playerWhite.turn(board, playerBlack, WIN): # Tour des blancs
             # Les blancs ont perdu
-            textsurface = end_game_font.render('BLACKS WIN', False, Color.BLUE.value)
-            WIN.blit(textsurface, (400,400))
+            endGame('BLACK')
 
         if not playerBlack.turn(board, playerWhite, WIN): # Tour des noirs
             # Les noirs ont perdu
-            textsurface = end_game_font.render('WHITES WIN', False, Color.BLUE.value)
-            WIN.blit(textsurface, (400,400))
+            endGame('WHITE')
     
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -51,5 +59,4 @@ def launchGame():
     
 
 if __name__ == '__main__':
-    
     launchGame()

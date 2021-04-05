@@ -23,8 +23,6 @@ class Piece():
     def changeNotation(self):
         self.notation= self.notation.lower() if self.color == WHITE else self.notation.upper()
 
-
-
     def moveLegal (self, board, dx, dy, opponent) :
         r = []
         nx, ny = self.x+dx, self.y+dy # on fait directement le premier mouvement
@@ -71,6 +69,7 @@ class Piece():
         Retourne True si le mouvement empêche un échec
         """
         # On fait comme si le mouvement avait lieu et on regarde si le player est toujours en échec
+        # print("1",board)
         newX, newY = newPosition # On récupère les coordonnées de la nouvelle position
         # Coordonnées de l'ancienne
         firstX = self.x
@@ -83,6 +82,7 @@ class Piece():
         self.y = newY
         board.grid[firstY][firstX] = None # On efface la case de départ 
         board.grid[newY][newX] = self # On remplit la case d'arrivée
+        # print("2",board)
 
         # On regarde si on est toujours en échec (si le mouvement empêche un échec)
         result = self.player.isChecked(board, opponent)
@@ -92,7 +92,8 @@ class Piece():
         self.y = firstY
         board.grid[firstY][firstX] = self # On fait revenir la case
         board.grid[newY][newX] = caseArrivee
-        return result
+        # print("3",board)
+        return not result
 
     
 class King(Piece):
@@ -104,7 +105,7 @@ class King(Piece):
     def __init__(self, color,x,y,player):
         super().__init__(color,x,y,player)
         self.notation = "R"
-        self.isAccessible = [[True]*8 for _ in range(8)]
+        
         super().changeNotation()
         
         # self.IMAGE = pygame.image.load(os.path.join(self.assets_folder, f"{color.lower()[0]}k.svg"))
@@ -132,46 +133,44 @@ class King(Piece):
         """
         Regarde si le roi est en échec ou non
         """
-        self.casesInaccessiblesPourLeRoi(board, opponent)
-        if self.isAccessible[self.y][self.x] == False:
-            return True # On est en échec
-        return False # On est pas en échec
+        isAccessible = self.casesInaccessiblesPourLeRoi(board, opponent)
+        return not isAccessible[self.y][self.x] # retourne si la case du roi est accessible ou non
 
     def casesInaccessiblesPourLeRoi(self, board, opponent):
         """
-        Renvoie un tableau avec True si la case est safe et False sinon
+        Met à jour un tableau avec True si la case est safe et False sinon
         """
-        self.isAccessible = [[True]*8 for _ in range(8)] # On part du principe que tout est accessible
+        isAccessible = [[True]*8 for _ in range(8)] # On part du principe que tout est accessible
 
         # Pour toutes les cases
         for x in range(8):
             for y in range(8):
-                if board.grid[y][x] is not None:
+                
+                if board.grid[y][x] is not None: # Si on tombe sur une pièce
+                    piece = board.grid[y][x]
+                    if piece.player == self.player and piece != self: # Si c une pièce alliée différente du roi
+                        isAccessible[y][x] = False
 
-                    if board.grid[y][x].player == self.player: # Si c notre propre pièce, on ne  peut pas y aller
-                        self.isAccessible[y][x] = False
-                    
                     else: # Piece ennemie
-                        pieceEnnemie = board.grid[y][x]
-                        cases = pieceEnnemie.getControls(board, self.player)
+                        cases = piece.getControls(board, self.player)
                         # Pour chaque case accessible par ladite pièce adverse
-                        for (X,Y) in cases:
-                            if 0<=X<8 and 0<=Y<8 and self.isAccessible[Y][X] == True:
-                                self.isAccessible[Y][X] = False
+                        for (X,Y) in cases: # Pour chaque case sous contrôle de l'ennemi
+                            if 0<=X<8 and 0<=Y<8 and isAccessible[Y][X] == True: #Si elle n'est pas envore marquée, on la marque
+                                isAccessible[Y][X] = False
+
+        return isAccessible
 
     def getLegalMoves(self, board, opponent):
         """
         Retourne une liste de mouvements légaux
         """
-        self.casesInaccessiblesPourLeRoi(board, opponent)
+        isAccessible = self.casesInaccessiblesPourLeRoi(board, opponent)
         legalMoves = [] # couples de positions (x, y) possibles
         for dec_x, dec_y in self.decalages:
             new_x = self.x+dec_x
             new_y = self.y+dec_y
-            if 0<=new_x<8 and 0<=new_y<8 and self.isAccessible[new_y][new_x]:
+            if 0<=new_x<8 and 0<=new_y<8 and isAccessible[new_y][new_x]:
                 legalMoves.append((new_x, new_y))
-        # for line in self.isAccessible:
-        #     print(line)
         return legalMoves
 
     def getControls(self, board, opponent):
@@ -237,7 +236,7 @@ class Pawn(Piece):
         self.IMAGE = load_svg(os.path.join(self.assets_folder, f"{color.lower()[0]}p.svg"))
 
 
-        self.tourAuMomentOuElleAvanceDeDeuxCases = None # Pour gérer en Passant
+        # self.tourAuMomentOuElleAvanceDeDeuxCases = None # Pour gérer en Passant
 
         if self.color == WHITE:
             self.direction = -1
@@ -255,7 +254,6 @@ class Pawn(Piece):
         #i.e. que la case suivante est vide
         if self.isEmpty(self.x, new_y, board): 
             if self.moveAvoidCheck((self.x, new_y),board, opponent):
-                # print("Hello")
                 legalMoves.append((self.x, new_y))
         # On teste à gauche et à droite
 
@@ -274,7 +272,6 @@ class Pawn(Piece):
         new_y = self.y + 2*self.direction
         if not self.alreadyMoved and self.isEmpty(self.x, new_y, board): 
             if self.moveAvoidCheck((self.x, new_y),board, opponent):
-                self.alreadyMoved = True
                 legalMoves.append((self.x, new_y))
 
         return legalMoves
@@ -292,7 +289,6 @@ class Pawn(Piece):
         # On regarde à droite
         new_x = self.x+1
         controls.append((new_x, new_y))
-
         return controls
    
         
