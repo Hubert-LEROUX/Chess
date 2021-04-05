@@ -62,7 +62,7 @@ def launchGame():
     while True:
         board.updateGraphicalInterface(WIN, [playerBlack, playerWhite])
         # print(board)
-        nbCoups+=1
+        nbCoups+=1 # On incrémente le nombre de coups
 
 
         etat = playerWhite.turn(board, playerBlack, WIN, nbCoups) # Tour des blancs
@@ -76,6 +76,7 @@ def launchGame():
         # print("\n".join([str(x) for x in playerBlack.king.casesInaccessiblesPourLeRoi(board, playerWhite)]))
         # print()
 
+        nbCoups+=1 #  on incrémente de coups
         etat = playerBlack.turn(board, playerWhite, WIN, nbCoups) # Tour des noirs
         if etat == 0:
             # Les noirs ont perdu

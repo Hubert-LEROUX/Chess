@@ -85,9 +85,9 @@ class Board():
             if 0<=x<8 and 0<=y<8:
                 center = (x*100+150, y*100+150)
                 if self.grid[y][x] is None: # Case vide
-                    pygame.draw.circle(window, Color.RED.value, center, 30, 0) # Un disque
+                    pygame.draw.circle(window, Color.GRAY.value, center, 20, 0) # Un disque
                 else: # Case ennemi
-                    pygame.draw.circle(window, Color.RED.value, center, 50, 10) # Un cercle
+                    pygame.draw.circle(window, Color.GRAY.value, center, 50, 10) # Un cercle
         pygame.display.update()
     
     def convertMousePosition2boardPosition(self, mousePosition):

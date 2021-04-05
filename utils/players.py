@@ -89,13 +89,21 @@ class Player():
 
             pygame.time.delay(100) # On attend un peu pour ne pas trop surmener l'ordi
         return None
+        
+    def captureTerritoire(self, x, y, opponent, board) :
+        # S'occupe de la capture terrritoire
+        if board.grid[y][x] is not None:
+            self.captured.append(board.grid[y][x])
+            opponent.pieces.remove(board.grid[y][x])
+            board.grid[y][x] = None
+        
 
     def turn(self, board, opponent, window, nbCoups=0):
         """
         Simule le tour de player
         """
         # print("CKECKING if check mate")
-        etat = self.isCheckedMated(board, opponent)
+        etat = self.isCheckedMated(board, opponent, nbCoups)
         if etat < 2:
             return etat
 
@@ -114,7 +122,7 @@ class Player():
                 piece = self.pickPiece(board, opponent, window)
                 posDep = (piece.x, piece.y)
                 pieceSelectionne =  True # On a une pièce
-                possibleMoves = piece.getLegalMoves(board, opponent) # On regarde ses moves possibles
+                possibleMoves = piece.getLegalMoves(board, opponent, nbCoups) # On regarde ses moves possibles
                 board.markCases(possibleMoves, window) # On marque les positions possibles
 
             # On regarde quelle position il choisit
@@ -135,27 +143,35 @@ class Player():
         board.grid[yDep][xDep] = None # On efface la pièce du jeu
         
         # On regarde si une pièce ennemi a été capturée
-        if board.grid[newY][newX] is not None:
-            self.captured.append(board.grid[newY][newX])
-            opponent.pieces.remove(board.grid[newY][newX])
+        self.captureTerritoire(newX, newY, opponent, board)
 
         # On dépose notre pièce
         piece.x = newX
         piece.y = newY
         piece.alreadyMoved = True
         piece.lastMove = nbCoups
+        piece.nbFoisMoved += 1
         
         # On regarde s'il y a promotion
         if isinstance(piece, Pawn) and piece.y == piece.promotionLine: # On fait une promotion
             pieceDemandee = self.askPromotionPiece(window, piece.x, piece.y)
+
             self.pieces.remove(piece)
             self.pieces.append(pieceDemandee)
+
             # pieceDemandee.x = piece.x
             # pieceDemandee.y = piece.y
             board.grid[newY][newX] = pieceDemandee
         else:
             board.grid[newY][newX] = piece
-            
+
+        #* On regarde si l'on a fait en passant :)
+        if isinstance(piece, Pawn) and piece.y == (piece.enPassantLine + piece.direction): # Si on est un pion et qu'on vient de dépasser la ligne "en passant"
+            # On regarde si en-dessous, il y a un pion vulnérable
+            # print("HELLO")
+            if piece.isPawnVulnerableForEnPassant(piece.x, piece.enPassantLine, board, opponent, nbCoups):
+                print("HELLO") # pour le debug
+                self.captureTerritoire(piece.x, piece.enPassantLine, opponent, board)
 
         board.updateGraphicalInterface(window, [self, opponent])
         
@@ -211,7 +227,7 @@ class Player():
     def isChecked(self, board, opponent):
         return self.king.isChecked(board, opponent)
 
-    def isCheckedMated(self, board, opponent):
+    def isCheckedMated(self, board, opponent, nbCoups):
         """
         Fonction déterminant si le joueur est mort ou non
         Renvoie un nombre :
@@ -224,7 +240,7 @@ class Player():
         for i,piece in enumerate(self.pieces):
             # print(i, piece)
 
-            if len(piece.getLegalMoves(board, opponent))>0: # On a au moins un move possible
+            if len(piece.getLegalMoves(board, opponent, nbCoups))>0: # On a au moins un move possible
                 return 2
         
         if self.isChecked(board, opponent): # On est en échec
