@@ -29,3 +29,10 @@ class Tower(Piece):
         Renvoie les cases controlées
         """
         return self.moveTheoric(board, 1, 0, opponent) + self.moveTheoric(board, -1, 0, opponent) + self.moveTheoric(board, 0, 1, opponent) + self.moveTheoric(board, 0, -1, opponent)
+
+    def whereDoSheRockate(self):
+        if self.x == 0: #*Great Rock
+            return (3, self.y)
+        #* Little Rock
+        return (5, self.y)
+

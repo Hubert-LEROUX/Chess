@@ -52,7 +52,7 @@ class Player():
         self.pieces.append(q)
         board.addPiece(q)
 
-    def pickPiece(self, board, opponent, window):
+    def waitPickPiece(self, board, opponent, window):
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -71,7 +71,7 @@ class Player():
             pygame.time.delay(100) # On attend un peu pour ne pas trop surmener l'ordi
         return None
 
-    def movePiece(self, board, opponent, window):
+    def waitMovePiece(self, board, opponent, window):
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -101,51 +101,13 @@ class Player():
             board.grid[y][x] = None
             return "x" # Pour la notation
         return ""
-        
 
-    def turn(self, board, opponent, window, nbCoups, register):
+    def moveSinglePiece(self, piece, newX, newY, board, opponent, window, nbCoups):
         """
-        Simule le tour de player
+        Bouge une pièce
+        Gère la promotion également
         """
-        # print("CKECKING if check mate")
-        etat = self.isCheckedMated(board, opponent, nbCoups)
-        if etat < 2:
-            return etat
-
-        # print("NOT CHECK MATE")
-        pieceSelectionne = False
-        possibleMoves = None
-        done = False
-       
-
-        posDep = posArr = None
-        piece = None
-        # TODO gérer l'intéraction avec le joueur pour récupérer la case sélectionnée
-        # On reagarde si le joueur a cliqué sur une pièc
-        while not done:
-            if not pieceSelectionne: # On a pas encore choisi de pièce
-                piece = self.pickPiece(board, opponent, window)
-                posDep = (piece.x, piece.y)
-                pieceSelectionne =  True # On a une pièce
-                possibleMoves = piece.getLegalMoves(board, opponent, nbCoups) # On regarde ses moves possibles
-                board.markCases(possibleMoves, window) # On marque les positions possibles
-
-            # On regarde quelle position il choisit
-            posArr = self.movePiece(board, opponent, window)
-            if posArr in possibleMoves: # On a trouvé le coup
-                done = True
-
-            elif posArr is not None: # On a touché à côté, i.e. on annule le coup
-                pieceSelectionne = False
-                board.updateGraphicalInterface(window, [self, opponent])
-            
-            
-        # On a la position de départ et celle d'arrivée
-        # *On effectue le mouvement
-        xDep,yDep = posDep
-        newX, newY = posArr
-
-        board.grid[yDep][xDep] = None # On efface la pièce du jeu
+        board.grid[piece.y][piece.x] = None # On efface la pièce du jeu
         
         # On regarde si une pièce ennemi a été capturée
         suffix = self.captureTerritoire(newX, newY, opponent, board)
@@ -169,6 +131,54 @@ class Player():
             board.grid[newY][newX] = pieceDemandee
         else:
             board.grid[newY][newX] = piece
+        return suffix
+        
+
+    def turn(self, board, opponent, window, nbCoups, register):
+        """
+        Simule le tour de player
+        """
+        # print("CKECKING if check mate")
+        etat = self.isCheckedMated(board, opponent, nbCoups)
+        if etat < 2:
+            return etat
+
+        # print("NOT CHECK MATE")
+        pieceSelectionne = False
+        possibleMoves = None
+        done = False
+       
+
+        posDep = posArr = None
+        piece = None
+
+        special = None
+        suffix = ""
+        # TODO gérer l'intéraction avec le joueur pour récupérer la case sélectionnée
+        # On reagarde si le joueur a cliqué sur une pièc
+        while not done:
+            if not pieceSelectionne: # On a pas encore choisi de pièce
+                piece = self.waitPickPiece(board, opponent, window)
+                posDep = (piece.x, piece.y)
+                pieceSelectionne =  True # On a une pièce
+                possibleMoves = piece.getLegalMoves(board, opponent, nbCoups) # On regarde ses moves possibles
+                board.markCases(possibleMoves, window) # On marque les positions possibles
+
+            # On regarde quelle position il choisit
+            posArr = self.waitMovePiece(board, opponent, window)
+            if posArr in possibleMoves: # On a trouvé le coup
+                done = True
+
+            elif posArr is not None: # On a touché à côté, i.e. on annule le coup
+                pieceSelectionne = False
+                board.updateGraphicalInterface(window, [self, opponent])
+            
+            
+        # On a la position de départ et celle d'arrivée
+        # *On effectue le mouvement
+        xDep,yDep = posDep
+        newX, newY = posArr
+        suffix += self.moveSinglePiece(piece, newX, newY, board, opponent, window, nbCoups)
 
         #* On regarde si l'on a fait en passant :)
         if isinstance(piece, Pawn) and piece.y == (piece.enPassantLine + piece.direction): # Si on est un pion et qu'on vient de dépasser la ligne "en passant"
@@ -176,14 +186,24 @@ class Player():
             # print("HELLO")
             if piece.isPawnVulnerableForEnPassant(piece.x, piece.enPassantLine, board, opponent, nbCoups):
                 # print("HELLO") # pour le debug
-                suffix = self.captureTerritoire(piece.x, piece.enPassantLine, opponent, board)
+                suffix += self.captureTerritoire(piece.x, piece.enPassantLine, opponent, board)
+
+        #* Si l'on a fait un rock ?
+        if isinstance(piece, King) and abs(piece.x-xDep)==2: #Si c'est un roi et qu'on a fait un déplacement de deux alors c'est un rock
+            if piece.x == 2: # Grand rock
+                special = "0-0-0"
+                self.moveSinglePiece(board.grid[piece.y][0], 3, piece.y, board, opponent, window, nbCoups)
+            else: # Petit rock
+                special = "0-0"
+                self.moveSinglePiece(board.grid[piece.y][7], 5, piece.y, board, opponent, window, nbCoups)
 
         if opponent.isCheckedMated(board, self, nbCoups)==0:
             suffix += "#" # Notation pour l'échec et mat
         elif opponent.isChecked(board, self):
             suffix += "+"
 
-        register.addMove(piece, suffix)
+
+        register.addMove(piece, suffix, special)
         register.save()
         board.updateGraphicalInterface(window, [self, opponent])
         

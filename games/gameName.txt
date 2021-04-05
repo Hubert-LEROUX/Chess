@@ -1,6 +1,13 @@
 Date : April 05, 2021
-Number of moves : 1
+Number of moves : 8
 White Name : TheNameOfWhoPlaysWhites
 Black Name : TheNameOfWhoPlaysBlacks
 === RESUME ===
-1 pE4
+1 pF3 PF6
+2 cH3 PC6
+3 pG3 DC7
+4 fG2 PB6
+5 0-0 FB7
+6 pE3 CA6
+7 pD3 0-0-0
+8 pD4 PD5

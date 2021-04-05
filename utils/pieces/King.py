@@ -6,6 +6,11 @@ import pygame
 import os
 
 from utils.pieces import Piece
+from utils.pieces.Tower import Tower
+
+# import inspect
+# print("CLASS: ",inspect.isclass(Tower))
+
 
 class King(Piece):
     """
@@ -28,17 +33,35 @@ class King(Piece):
                 if dx or dy : # si on ne reste pas sur place
                     self.decalages.append((dx, dy))
 
-    def canGreatRock(self, board):
+    def canGreatRock(self, board, accessibles):
         """
         Il faut reagarder si le roi et la tour n'ont jamais bougé et que les cases entre les deux soient libres
+        return les coordonnées ou le roi bouge
         """
-        pass
+        if accessibles[self.y][1:5] == [True]*4 and (board.grid[self.y][0] is not None and isinstance(board.grid[self.y][0], Tower) and board.grid[self.y][0].alreadyMoved==False) and (self.alreadyMoved==False): 
+            #1.  Les cases sont accessible et on est pas en échec
+            #2. La tour est la et n'a pas bougé
+            #3. Le roi n'a pas bougé
+            return (2, self.y)
+        return None
 
-    def canLittleRock(self, board):
+
+    def canLittleRock(self, board, accessibles):
         """
         Il faut reagarder si le roi et la tour n'ont jamais bougé et que les cases entre les deux soient libres
         """
-        pass
+        # print(board.grid[self.y][7])
+        # print(accessibles[self.y][4:7] == [True]*3)
+        # # print(Tower)
+        # print(typeof(board.grid[self.y][7]))
+        # print(self.alreadyMoved==False)
+
+        if accessibles[self.y][4:7] == [True]*3 and (board.grid[self.y][7] is not None and isinstance(board.grid[self.y][7], Tower) and board.grid[self.y][7].alreadyMoved==False) and (self.alreadyMoved==False): 
+            #1.  Les cases sont accessible et on est pas en échec
+            #2. La tour est la et n'a pas bougé
+            #3. Le roi n'a pas bougé
+            return (6, self.y)
+        return None
 
     def isChecked(self, board, opponent):
         """
@@ -84,6 +107,11 @@ class King(Piece):
             if 0<=new_x<8 and 0<=new_y<8 and isAccessible[new_y][new_x]:
                 if self.moveAvoidCheck((new_x, new_y), board, opponent):
                     legalMoves.append((new_x, new_y))
+
+        rocks = [self.canLittleRock(board, isAccessible), self.canGreatRock(board, isAccessible)]
+        for rock in rocks:
+            if rock is not None:
+                legalMoves.append(rock)
         return legalMoves
 
     def getControls(self, board, opponent):
