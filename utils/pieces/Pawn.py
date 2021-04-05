@@ -69,9 +69,9 @@ class Pawn(Piece):
         """
         if self.isOpponentPiece(x,y,board):
             piece = board.grid[y][x]
-            print(f"diff coups == 1 : {abs(nbCoups-piece.lastMove)==1}")
-            print(f"nombre de mouvements vaut 1 : {piece.nbFoisMoved==1}")
-            print(f"bonne ligne pour en passant : {y == self.enPassantLine}")
+            # print(f"diff coups == 1 : {abs(nbCoups-piece.lastMove)==1}")
+            # print(f"nombre de mouvements vaut 1 : {piece.nbFoisMoved==1}")
+            # print(f"bonne ligne pour en passant : {y == self.enPassantLine}")
             if isinstance(piece, Pawn) and abs(nbCoups-piece.lastMove)==1 and piece.nbFoisMoved==1 and y == self.enPassantLine:
                 return True
         return False

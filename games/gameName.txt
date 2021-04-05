@@ -1,0 +1,6 @@
+Date : April 05, 2021
+Number of moves : 1
+White Name : TheNameOfWhoPlaysWhites
+Black Name : TheNameOfWhoPlaysBlacks
+=== RESUME ===
+1 pE4

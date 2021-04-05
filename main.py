@@ -7,7 +7,9 @@ pygame.font.init()
 from utils.pieces import Piece, King, Tower, Bishop, Knight, Queen
 from utils.board import Board
 from utils.players import Player
+from utils.register import Register
 from utils.varglob import WHITE, BLACK, Color
+from utils.settings import settings
 
 def launchGame():
     pieceSize = 100 # taille de chaque pièce du jeu d'échecs
@@ -25,6 +27,9 @@ def launchGame():
     board = Board()
     playerWhite = Player(board, WHITE)
     playerBlack = Player(board, BLACK)
+
+    #* Register
+    register = Register(settings["whereToSave"], settings["whoPlaysWhite"], settings["whoPlaysBlack"])
 
     def endGame(whoWins):
         """
@@ -65,7 +70,7 @@ def launchGame():
         nbCoups+=1 # On incrémente le nombre de coups
 
 
-        etat = playerWhite.turn(board, playerBlack, WIN, nbCoups) # Tour des blancs
+        etat = playerWhite.turn(board, playerBlack, WIN, nbCoups, register) # Tour des blancs
         if etat == 0:
             # Les blancs ont perdu
             endGame('BLACK')
@@ -77,10 +82,11 @@ def launchGame():
         # print()
 
         nbCoups+=1 #  on incrémente de coups
-        etat = playerBlack.turn(board, playerWhite, WIN, nbCoups) # Tour des noirs
+        etat = playerBlack.turn(board, playerWhite, WIN, nbCoups, register) # Tour des noirs
         if etat == 0:
             # Les noirs ont perdu
             endGame('WHITE')
+
         elif etat == 1:
             endGameNulle()
     

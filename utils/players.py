@@ -91,14 +91,19 @@ class Player():
         return None
         
     def captureTerritoire(self, x, y, opponent, board) :
+        """
         # S'occupe de la capture terrritoire
+        Retourne une croix s'il y a capture
+        """
         if board.grid[y][x] is not None:
             self.captured.append(board.grid[y][x])
             opponent.pieces.remove(board.grid[y][x])
             board.grid[y][x] = None
+            return "x" # Pour la notation
+        return ""
         
 
-    def turn(self, board, opponent, window, nbCoups=0):
+    def turn(self, board, opponent, window, nbCoups, register):
         """
         Simule le tour de player
         """
@@ -143,7 +148,7 @@ class Player():
         board.grid[yDep][xDep] = None # On efface la pièce du jeu
         
         # On regarde si une pièce ennemi a été capturée
-        self.captureTerritoire(newX, newY, opponent, board)
+        suffix = self.captureTerritoire(newX, newY, opponent, board)
 
         # On dépose notre pièce
         piece.x = newX
@@ -170,9 +175,16 @@ class Player():
             # On regarde si en-dessous, il y a un pion vulnérable
             # print("HELLO")
             if piece.isPawnVulnerableForEnPassant(piece.x, piece.enPassantLine, board, opponent, nbCoups):
-                print("HELLO") # pour le debug
-                self.captureTerritoire(piece.x, piece.enPassantLine, opponent, board)
+                # print("HELLO") # pour le debug
+                suffix = self.captureTerritoire(piece.x, piece.enPassantLine, opponent, board)
 
+        if opponent.isCheckedMated(board, self, nbCoups)==0:
+            suffix += "#" # Notation pour l'échec et mat
+        elif opponent.isChecked(board, self):
+            suffix += "+"
+
+        register.addMove(piece, suffix)
+        register.save()
         board.updateGraphicalInterface(window, [self, opponent])
         
         return etat
