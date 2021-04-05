@@ -8,7 +8,7 @@ pygame.font.init()
 from utils.pieces import Piece, King, Tower, Bishop, Knight, Queen
 from utils.board import Board
 from utils.players import Player
-from utils.varglob import WHITE, BLACK
+from utils.varglob import WHITE, BLACK, Color
 
 def launchGame():
     pieceSize = 100 # taille de chaque pièce du jeu d'échecs
@@ -21,7 +21,8 @@ def launchGame():
    
 
     main_font = pygame.font.SysFont("comicsans", 50)
-    #* BG = pygame.transform.scale(pygame.image.load(os.path.join(assets_folder, "background-black.png")), (WIDTH, HEIGHT))
+    end_game_font = pygame.font.SysFont("comicsans", 50)
+
 
 
     board = Board()
@@ -30,11 +31,19 @@ def launchGame():
 
     while True:
         board.updateGraphicalInterface(WIN)
+        print(board)
 
-        pygame.time.delay(100)
+        # pygame.time.delay(100)
 
-        playerWhite.turn(board, playerBlack)
-        playerBlack.turn(board, playerWhite)
+        if not playerWhite.turn(board, playerBlack, WIN): # Tour des blancs
+            # Les blancs ont perdu
+            textsurface = end_game_font.render('BLACKS WIN', False, Color.BLUE.value)
+            WIN.blit(textsurface, (400,400))
+
+        if not playerBlack.turn(board, playerWhite, WIN): # Tour des noirs
+            # Les noirs ont perdu
+            textsurface = end_game_font.render('WHITES WIN', False, Color.BLUE.value)
+            WIN.blit(textsurface, (400,400))
     
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
