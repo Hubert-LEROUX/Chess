@@ -25,4 +25,5 @@ settings = {
 ## Thanks
 
 To the site Canvas Chess http://www.canvaschess.com/download.php
-Je remercie ce site pour les échiquiers et les jeux de pièces qu'ils mettent à disposition.
+
+Je remercie ce site pour les échiquiers et les jeux de pièces mis à disposition.
