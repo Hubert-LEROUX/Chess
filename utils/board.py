@@ -40,7 +40,7 @@ class Board():
         # self.regenerateRepr()
         return "\n".join(" ".join([i.notation if i is not None else " " for i in j]) for j in self.grid)
 
-    def updateGraphicalInterface(self, window):
+    def updateGraphicalInterface(self, window, players):
         """
         update la graphical interface
         status: finshed
@@ -58,7 +58,14 @@ class Board():
                 for j in range(100,900, 200):
                     window.blit(self.WOOD[BLACK], (i,j))
                 for j in range(200,900, 200):
-                    window.blit(self.WOOD[WHITE], (i,j))
+                    window.blit(self.WOOD[WHITE], (i,j))    
+
+        # On met la case du roi en rouge s'il est en échec
+        if players[0].isChecked(self, players[1]):
+            pygame.draw.rect(window, Color.RED.value, (players[0].king.x*100+100, players[0].king.y*100+100, 100,100))
+        if players[1].isChecked(self, players[0]):
+            pygame.draw.rect(window, Color.RED.value, (players[1].king.x*100+100, players[1].king.y*100+100, 100,100))
+
         # Puis on affiche les pièces
         origin = (100,100)
         for i,line in enumerate(self.grid):

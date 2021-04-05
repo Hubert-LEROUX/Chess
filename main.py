@@ -22,8 +22,6 @@ def launchGame():
     main_font = pygame.font.SysFont("comicsans", 50)
     end_game_font = pygame.font.SysFont("comicsans", 75)
 
-
-
     board = Board()
     playerWhite = Player(board, WHITE)
     playerBlack = Player(board, BLACK)
@@ -41,15 +39,22 @@ def launchGame():
             duration += 50
         exit()
 
+    nbCoups = 0
     while True:
-        board.updateGraphicalInterface(WIN)
+        board.updateGraphicalInterface(WIN, [playerBlack, playerWhite])
         # print(board)
+        nbCoups+=1
 
-        if not playerWhite.turn(board, playerBlack, WIN): # Tour des blancs
+
+        if not playerWhite.turn(board, playerBlack, WIN, nbCoups): # Tour des blancs
             # Les blancs ont perdu
             endGame('BLACK')
 
-        if not playerBlack.turn(board, playerWhite, WIN): # Tour des noirs
+        # print()
+        # print("\n".join([str(x) for x in playerBlack.king.casesInaccessiblesPourLeRoi(board, playerWhite)]))
+        # print()
+
+        if not playerBlack.turn(board, playerWhite, WIN, nbCoups): # Tour des noirs
             # Les noirs ont perdu
             endGame('WHITE')
     

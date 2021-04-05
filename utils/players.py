@@ -88,7 +88,7 @@ class Player():
             pygame.time.delay(100) # On attend un peu pour ne pas trop surmener l'ordi
         return None
 
-    def turn(self, board, opponent, window):
+    def turn(self, board, opponent, window, nbCoups=0):
         """
         Simule le tour de player
         """
@@ -122,7 +122,7 @@ class Player():
 
             elif posArr is not None: # On a touché à côté, i.e. on annule le coup
                 pieceSelectionne = False
-                board.updateGraphicalInterface(window)
+                board.updateGraphicalInterface(window, [self, opponent])
             
             
         # On a la position de départ et celle d'arrivée
@@ -141,9 +141,10 @@ class Player():
         piece.x = newX
         piece.y = newY
         piece.alreadyMoved = True
+        piece.lastMove = nbCoups
         board.grid[newY][newX] = piece
 
-        board.updateGraphicalInterface(window)
+        board.updateGraphicalInterface(window, [self, opponent])
         
         return True
 

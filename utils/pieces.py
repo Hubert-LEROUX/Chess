@@ -15,6 +15,7 @@ class Piece():
         self.decalages = [] # Conserve les décalages _théoriques_ que peut faire la pièce
         self.player = player # Conserve le joueur qui détient la pièce
         self.alreadyMoved = False # Indique si la pièce a déjà bougé
+        self.lastMove = None # On retient le tour auquel la pièce a bougé la dernière fois
         self.notation = "" # Conserve la notation de la pièce
         self.assets_folder = os.path.join("res", settings["piecesFolder"])
         self.x = x
@@ -36,14 +37,17 @@ class Piece():
                 r.append((nx, ny))
         return r
 
+
     def moveTheoric (self, board, dx, dy, opponent) :
         r = []
         nx, ny = self.x+dx, self.y+dy # on fait directement le premier mouvement
+
         while self.isEmpty(nx, ny, board) :
             r.append((nx, ny))
             nx += dx
             ny += dy
-        if self.isOpponentPiece(nx, ny, board) :
+        # Soit on est sorti, soit on est tombé sur une pièce
+        if 0<=nx<8 and 0<=ny<8:
             r.append((nx, ny))
         return r
 
@@ -148,10 +152,11 @@ class King(Piece):
                 
                 if board.grid[y][x] is not None: # Si on tombe sur une pièce
                     piece = board.grid[y][x]
-                    if piece.player == self.player and piece != self: # Si c une pièce alliée différente du roi
+
+                    if piece.player == self.player and not isinstance(piece, King): # Si c une pièce alliée différente du roi
                         isAccessible[y][x] = False
 
-                    else: # Piece ennemie
+                    elif piece.player != self.player: # Piece ennemie
                         cases = piece.getControls(board, self.player)
                         # Pour chaque case accessible par ladite pièce adverse
                         for (X,Y) in cases: # Pour chaque case sous contrôle de l'ennemi
